@@ -7,12 +7,18 @@ const PORT = process.env.PORT || 8000;
 // Middleware para leer JSON
 app.use(express.json());
 
+// ==========================================
+// CONECTAR LAS RUTAS DE LA API V1
+// ==========================================
+const v1Router = require('./routes/v1');
+app.use('/api/v1', v1Router);
+
 // Ruta de prueba general
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Bienvenido a la API de Workout Tracker v1' });
+    res.status(200).json({ message: 'Bienvenido a la API de Workout Tracker v1' });
 });
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
