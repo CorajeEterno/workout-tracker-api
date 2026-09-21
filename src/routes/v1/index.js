@@ -1,7 +1,8 @@
 const { Router } = require('express');
 const usersRoutes = require('./users.routes');
-const workoutsRoutes = require('./workouts.routes'); // Nombre en plural
-const exercisesRoutes = require('./exercises.routes'); // Nuevo módulo de ejercicios en plural
+const workoutsRoutes = require('./workouts.routes'); 
+const exercisesRoutes = require('./exercises.routes'); 
+const progressRoutes = require('./progress.routes'); // 1. Importar las rutas de progress
 
 const router = Router();
 
@@ -13,5 +14,8 @@ router.use('/workouts', workoutsRoutes);
 
 // Rutas de ejercicios -> Resultado final: /api/v1/exercises
 router.use('/exercises', exercisesRoutes);
+
+// Rutas de progreso -> Resultado final: /api/v1/progress
+router.use('/progress', progressRoutes); // 2. Registrar las rutas de progress
 
 module.exports = router;
