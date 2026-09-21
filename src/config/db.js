@@ -1,15 +1,8 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const db = {
+  users: [
+    { id: 1, name: 'Usuario Demo', email: 'demo@mail.com' },
+    { id: 2, name: 'Carlos Pérez', email: 'carlos@mail.com' }
+  ],
+};
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'workout_tracker',
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-module.exports = pool;
+module.exports = db;
