@@ -1,17 +1,44 @@
-const mysql = require('mysql2/promise');
-// Importamos el objeto db desde nuestro archivo de configuración
-const { db } = require('./env'); 
+const db = {
+  users: [
+    { id: 1, name: 'Usuario Demo', email: 'demo@mail.com' },
+    { id: 2, name: 'Carlos Pérez', email: 'carlos@mail.com' }
+  ],
+  exercises: [
+    { id: 1, name: 'Press de Banca', description: 'Ejercicio de pecho con barra', category: 'Fuerza', muscleGroup: 'Pecho' },
+    { id: 2, name: 'Sentadilla Libre', description: 'Sentadilla profunda con barra', category: 'Fuerza', muscleGroup: 'Piernas' }
+  ],
+  workouts: [
+    {
+      id: 1,
+      userId: 1,
+      title: 'Rutina de Pecho y Tríceps',
+      description: 'Enfoque en hipertrofia',
+      scheduledAt: '2026-09-20T10:00:00.000Z',
+      durationMinutes: 60,
+      status: 'completed'
+    },
+    {
+      id: 2,
+      userId: 1,
+      title: 'Entrenamiento de Pierna Pesado',
+      description: 'Fuerza e intensidad alta',
+      scheduledAt: '2026-09-22T08:00:00.000Z',
+      durationMinutes: 45,
+      status: 'pending'
+    }
+  ],
+  progressReports: [
+    {
+      id: 1,
+      userId: 1,
+      totalWorkouts: 2,
+      history: [
+        { id: 1, title: 'Rutina de Pecho y Tríceps', scheduledAt: '2026-09-20T10:00:00.000Z', status: 'completed' },
+        { id: 2, title: 'Entrenamiento de Pierna Pesado', scheduledAt: '2026-09-22T08:00:00.000Z', status: 'pending' }
+      ],
+      generatedAt: '2026-09-21T12:00:00.000Z'
+    }
+  ]
+};
 
-// Creamos el pool usando exclusivamente el objeto importado
-const pool = mysql.createPool({
-  host: db.host,
-  user: db.user,
-  password: db.password,
-  database: db.database,
-  port: db.port,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-module.exports = pool;
+module.exports = db;

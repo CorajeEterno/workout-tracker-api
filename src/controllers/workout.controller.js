@@ -1,203 +1,64 @@
-const pool = require('../config/db'); // Ajusta esta ruta si es necesario según la ubicación de tu controlador
+const db = require('../config/db');
 
-// ==========================================
-// CONTROLADORES DE WORKOUTS
-// ==========================================
+// GET /workouts?status=completed&limit=5
+const getWorkouts = (req, res) => {
+  const { status, date, scheduledAt, limit } = req.query;
+  let results = db.workouts;
 
-const createWorkout = async (req, res) => {
-  try {
-    const { userId, title, description, scheduledAt, durationMinutes, status } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO workouts (userId, title, description, scheduledAt, durationMinutes, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, title, description, scheduledAt, durationMinutes, status]
-    );
-    res.status(201).json({
-      success: true,
-      message: 'Entrenamiento creado exitosamente',
-      data: { id: result.insertId, userId, title, description, scheduledAt, durationMinutes, status }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  if (status) results = results.filter(w => w.status === status);
+  const targetDate = date || scheduledAt;
+  if (targetDate) results = results.filter(w => w.scheduledAt?.startsWith(targetDate));
+  if (limit) results = results.slice(0, Number(limit));
+
+  res.status(200).json({ success: true, data: results });
 };
 
-const getWorkouts = async (req, res) => {
-  try {
-    const { status, date, scheduledAt } = req.query; // Captura parámetros de la URL (?status=...&date=...)
+// GET /workouts/:id
+const getWorkoutById = (req, res) => {
+  const workout = db.workouts.find(w => w.id === Number(req.params.id));
+  if (!workout) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
 
-    let sql = 'SELECT * FROM workouts';
-    const params = [];
-    const conditions = [];
-
-    // Filtro por estado (status)
-    if (status) {
-      conditions.push('status = ?');
-      params.push(status);
-    }
-
-    // Filtro por fecha (acepta ?date=2026-09-20 o ?scheduledAt=2026-09-20)
-    const targetDate = date || scheduledAt;
-    if (targetDate) {
-      conditions.push('DATE(scheduledAt) = ?'); // Extrae solo el año-mes-día de la columna DATETIME
-      params.push(targetDate);
-    }
-
-    // Si hay uno o más filtros, los añade con WHERE
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    const [rows] = await pool.query(sql, params);
-    res.status(200).json({ success: true, data: rows });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  res.status(200).json({ success: true, data: workout });
 };
 
-const getWorkoutById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await pool.query('SELECT * FROM workouts WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-    }
-    res.status(200).json({ success: true, data: rows[0] });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+// POST /workouts
+const createWorkout = (req, res) => {
+  const { userId, title, description, scheduledAt, durationMinutes, status } = req.body;
+  
+  if (!userId || !title) {
+    return res.status(400).json({ success: false, message: 'userId y title son campos obligatorios' });
   }
+
+  const newWorkout = {
+    id: db.workouts.length ? db.workouts[db.workouts.length - 1].id + 1 : 1,
+    userId: Number(userId),
+    title,
+    description: description || '',
+    scheduledAt: scheduledAt || new Date().toISOString(),
+    durationMinutes: Number(durationMinutes) || 0,
+    status: status || 'pending'
+  };
+
+  db.workouts.push(newWorkout);
+  res.status(201).json({ success: true, message: 'Entrenamiento creado exitosamente', data: newWorkout });
 };
 
-const updateWorkout = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, scheduledAt, durationMinutes, status } = req.body;
-    const [result] = await pool.query(
-      'UPDATE workouts SET title = ?, description = ?, scheduledAt = ?, durationMinutes = ?, status = ? WHERE id = ?',
-      [title, description, scheduledAt, durationMinutes, status, id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-    }
-    res.status(200).json({ success: true, message: 'Entrenamiento actualizado exitosamente' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+// PUT /workouts/:id
+const updateWorkout = (req, res) => {
+  const index = db.workouts.findIndex(w => w.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
+
+  db.workouts[index] = { ...db.workouts[index], ...req.body };
+  res.status(200).json({ success: true, message: 'Entrenamiento actualizado exitosamente' });
 };
 
-const deleteWorkout = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [result] = await pool.query('DELETE FROM workouts WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-    }
-    res.status(200).json({ success: true, message: 'Entrenamiento eliminado exitosamente' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+// DELETE /workouts/:id (Estado 204 No Content)
+const deleteWorkout = (req, res) => {
+  const index = db.workouts.findIndex(w => w.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
 
-
-// ==========================================
-// CONTROLADORES DE WORKOUTS <-> EXERCISES
-// ==========================================
-
-// Asociar un ejercicio al entrenamiento de un usuario
-const addExerciseToWorkout = async (req, res) => {
-  try {
-    const { workoutId } = req.params;
-    const { exerciseId, sets, reps, weight } = req.body;
-
-    const [workoutCheck] = await pool.query('SELECT * FROM workouts WHERE id = ?', [workoutId]);
-    if (workoutCheck.length === 0) {
-      return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-    }
-
-    const [exerciseCheck] = await pool.query('SELECT * FROM exercises WHERE id = ?', [exerciseId]);
-    if (exerciseCheck.length === 0) {
-      return res.status(404).json({ success: false, message: 'Ejercicio no encontrado en el catálogo' });
-    }
-
-    const [result] = await pool.query(
-      'INSERT INTO workout_exercises (workoutId, exerciseId, sets, reps, weight) VALUES (?, ?, ?, ?, ?)',
-      [workoutId, exerciseId, sets, reps, weight]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Ejercicio asociado al entrenamiento exitosamente',
-      data: {
-        id: result.insertId,
-        workoutId: Number(workoutId),
-        exerciseId,
-        sets,
-        reps,
-        weight
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Obtener los ejercicios asociados a un entrenamiento específico
-const getExercisesByWorkout = async (req, res) => {
-  try {
-    const { workoutId } = req.params;
-
-    const [rows] = await pool.query(
-      `SELECT we.id as associationId, e.id as exerciseId, e.name, e.category, e.muscleGroup, we.sets, we.reps, we.weight 
-       FROM workout_exercises we
-       JOIN exercises e ON we.exerciseId = e.id
-       WHERE we.workoutId = ?`,
-      [workoutId]
-    );
-
-    res.status(200).json({ success: true, data: rows });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Actualizar las series, repeticiones o peso de un ejercicio dentro de un entrenamiento
-const updateWorkoutExercise = async (req, res) => {
-  try {
-    const { workoutId, id } = req.params;
-    const { sets, reps, weight } = req.body;
-
-    const [result] = await pool.query(
-      'UPDATE workout_exercises SET sets = ?, reps = ?, weight = ? WHERE id = ? AND workoutId = ?',
-      [sets, reps, weight, id, workoutId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Relación de ejercicio en el entrenamiento no encontrada' });
-    }
-
-    res.status(200).json({ success: true, message: 'Ejercicio del entrenamiento actualizado exitosamente' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Remover un ejercicio de un entrenamiento
-const removeExerciseFromWorkout = async (req, res) => {
-  try {
-    const { workoutId, id } = req.params;
-
-    const [result] = await pool.query(
-      'DELETE FROM workout_exercises WHERE id = ? AND workoutId = ?',
-      [id, workoutId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Relación de ejercicio en el entrenamiento no encontrada' });
-    }
-
-    res.status(200).json({ success: true, message: 'Ejercicio removido del entrenamiento exitosamente' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  db.workouts.splice(index, 1);
+  res.status(204).send();
 };
 
 module.exports = {
@@ -205,9 +66,5 @@ module.exports = {
   getWorkouts,
   getWorkoutById,
   updateWorkout,
-  deleteWorkout,
-  addExerciseToWorkout,
-  getExercisesByWorkout,
-  updateWorkoutExercise,
-  removeExerciseFromWorkout
+  deleteWorkout
 };
