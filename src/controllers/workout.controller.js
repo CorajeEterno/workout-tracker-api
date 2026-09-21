@@ -1,109 +1,59 @@
-const pool = require('../config/db');
+const db = require('../config/db');
 
-// [POST] /v1/workouts - Crear un nuevo plan de entrenamiento
-const createWorkout = async (req, res) => {
-    try {
-        const { userId, title, description, scheduledAt, durationMinutes, status } = req.body;
-        
-        const [result] = await pool.query(
-            'INSERT INTO workouts (userId, title, description, scheduledAt, durationMinutes, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [userId, title, description, scheduledAt, durationMinutes, status || 'pending']
-        );
+const createWorkout = (req, res) => {
+  const { userId, title, description, scheduledAt, durationMinutes, status } = req.body;
+  const newWorkout = {
+    id: db.workouts.length ? db.workouts[db.workouts.length - 1].id + 1 : 1,
+    userId: Number(userId),
+    title,
+    description,
+    scheduledAt,
+    durationMinutes: Number(durationMinutes),
+    status: status || 'pending'
+  };
 
-        res.status(201).json({ 
-            success: true, 
-            message: 'Entrenamiento creado correctamente',
-            data: { id: result.insertId, userId, title, description, scheduledAt, durationMinutes, status: status || 'pending' }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  db.workouts.push(newWorkout);
+  res.status(201).json({ success: true, message: 'Entrenamiento creado exitosamente', data: newWorkout });
 };
 
-// [GET] /v1/workouts - Listar entrenamientos (soporta filtros ?status=pending y ?date=YYYY-MM-DD)
-const getWorkouts = async (req, res) => {
-    try {
-        const { status, date } = req.query;
-        let query = 'SELECT * FROM workouts WHERE 1=1';
-        let params = [];
+const getWorkouts = (req, res) => {
+  const { status, date, scheduledAt } = req.query;
+  let results = db.workouts;
 
-        if (status) {
-            query += ' AND status = ?';
-            params.push(status);
-        }
+  if (status) results = results.filter(w => w.status === status);
+  const targetDate = date || scheduledAt;
+  if (targetDate) results = results.filter(w => w.scheduledAt?.startsWith(targetDate));
 
-        if (date) {
-            query += ' AND DATE(scheduledAt) = ?';
-            params.push(date);
-        }
-
-        query += ' ORDER BY scheduledAt ASC';
-
-        const [workouts] = await pool.query(query, params);
-        res.status(200).json({ success: true, data: workouts });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  res.status(200).json({ success: true, data: results });
 };
 
-// [GET] /v1/workouts/:id - Obtener detalle de un entrenamiento
-const getWorkoutById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [workouts] = await pool.query('SELECT * FROM workouts WHERE id = ?', [id]);
+const getWorkoutById = (req, res) => {
+  const workout = db.workouts.find(w => w.id === Number(req.params.id));
+  if (!workout) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
 
-        if (workouts.length === 0) {
-            return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-        }
-
-        res.status(200).json({ success: true, data: workouts[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  res.status(200).json({ success: true, data: workout });
 };
 
-// [PUT] /v1/workouts/:id - Actualizar un entrenamiento existente
-const updateWorkout = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { title, description, scheduledAt, durationMinutes, status } = req.body;
+const updateWorkout = (req, res) => {
+  const index = db.workouts.findIndex(w => w.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
 
-        const [existing] = await pool.query('SELECT * FROM workouts WHERE id = ?', [id]);
-        if (existing.length === 0) {
-            return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-        }
-
-        await pool.query(
-            'UPDATE workouts SET title = ?, description = ?, scheduledAt = ?, durationMinutes = ?, status = ? WHERE id = ?',
-            [title, description, scheduledAt, durationMinutes, status, id]
-        );
-
-        res.status(200).json({ success: true, message: 'Entrenamiento actualizado correctamente' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  db.workouts[index] = { ...db.workouts[index], ...req.body };
+  res.status(200).json({ success: true, message: 'Entrenamiento actualizado exitosamente' });
 };
 
-// [DELETE] /v1/workouts/:id - Eliminar un entrenamiento específico
-const deleteWorkout = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [result] = await pool.query('DELETE FROM workouts WHERE id = ?', [id]);
+const deleteWorkout = (req, res) => {
+  const index = db.workouts.findIndex(w => w.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Entrenamiento no encontrado' });
-        }
-
-        res.status(200).json({ success: true, message: 'Entrenamiento eliminado correctamente' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  db.workouts.splice(index, 1);
+  res.status(200).json({ success: true, message: 'Entrenamiento eliminado exitosamente' });
 };
 
 module.exports = {
-    createWorkout,
-    getWorkouts,
-    getWorkoutById,
-    updateWorkout,
-    deleteWorkout
+  createWorkout,
+  getWorkouts,
+  getWorkoutById,
+  updateWorkout,
+  deleteWorkout
 };

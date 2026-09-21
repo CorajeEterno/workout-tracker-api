@@ -1,10 +1,9 @@
-const pool = require('../config/db'); // Ajusta la ruta según tu conexión
+const db = require('../config/db');
 
-// 1. Listar todos los ejercicios
+// 1. Obtener todos los ejercicios
 const getExercises = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM exercises');
-    res.status(200).json({ success: true, data: rows });
+    res.status(200).json({ success: true, data: db.exercises });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -14,13 +13,13 @@ const getExercises = async (req, res) => {
 const getExerciseById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query('SELECT * FROM exercises WHERE id = ?', [id]);
-    
-    if (rows.length === 0) {
+    const exercise = db.exercises.find(e => e.id === Number(id));
+
+    if (!exercise) {
       return res.status(404).json({ success: false, message: 'Ejercicio no encontrado' });
     }
-    
-    res.status(200).json({ success: true, data: rows[0] });
+
+    res.status(200).json({ success: true, data: exercise });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -30,16 +29,21 @@ const getExerciseById = async (req, res) => {
 const createExercise = async (req, res) => {
   try {
     const { name, description, category, muscleGroup } = req.body;
-    
-    const [result] = await pool.query(
-      'INSERT INTO exercises (name, description, category, muscleGroup) VALUES (?, ?, ?, ?)',
-      [name, description, category, muscleGroup]
-    );
+
+    const newExercise = {
+      id: db.exercises.length ? db.exercises[db.exercises.length - 1].id + 1 : 1,
+      name,
+      description,
+      category,
+      muscleGroup
+    };
+
+    db.exercises.push(newExercise);
 
     res.status(201).json({
       success: true,
       message: 'Ejercicio creado exitosamente',
-      data: { id: result.insertId, name, description, category, muscleGroup }
+      data: newExercise
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -52,14 +56,12 @@ const updateExercise = async (req, res) => {
     const { id } = req.params;
     const { name, description, category, muscleGroup } = req.body;
 
-    const [result] = await pool.query(
-      'UPDATE exercises SET name = ?, description = ?, category = ?, muscleGroup = ? WHERE id = ?',
-      [name, description, category, muscleGroup, id]
-    );
-
-    if (result.affectedRows === 0) {
+    const index = db.exercises.findIndex(e => e.id === Number(id));
+    if (index === -1) {
       return res.status(404).json({ success: false, message: 'Ejercicio no encontrado para actualizar' });
     }
+
+    db.exercises[index] = { ...db.exercises[index], name, description, category, muscleGroup };
 
     res.status(200).json({ success: true, message: 'Ejercicio actualizado exitosamente' });
   } catch (error) {
@@ -71,12 +73,13 @@ const updateExercise = async (req, res) => {
 const deleteExercise = async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await pool.query('DELETE FROM exercises WHERE id = ?', [id]);
+    const index = db.exercises.findIndex(e => e.id === Number(id));
 
-    if (result.affectedRows === 0) {
+    if (index === -1) {
       return res.status(404).json({ success: false, message: 'Ejercicio no encontrado para eliminar' });
     }
 
+    db.exercises.splice(index, 1);
     res.status(200).json({ success: true, message: 'Ejercicio eliminado exitosamente' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

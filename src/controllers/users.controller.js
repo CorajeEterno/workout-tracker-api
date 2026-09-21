@@ -1,93 +1,86 @@
-const pool = require('../config/db');
+const db = require('../config/db');
 
-// [GET] Obtener todos los usuarios
+// Obtener todos los usuarios
 const getUsers = async (req, res) => {
-    try {
-        const [rows] = await pool.query('SELECT * FROM users');
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  try {
+    res.status(200).json({ success: true, data: db.users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
-// [GET] Obtener un usuario por ID
+// Obtener usuario por ID
 const getUserById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-        }
+  try {
+    const { id } = req.params;
+    const user = db.users.find(u => u.id === Number(id));
 
-        res.status(200).json({ success: true, data: rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
-// [POST] Crear un usuario nuevo
+// Crear usuario
 const createUser = async (req, res) => {
-    try {
-        const { name, email } = req.body;
-        
-        const [result] = await pool.query(
-            'INSERT INTO users (name, email) VALUES (?, ?)',
-            [name, email]
-        );
+  try {
+    const { name, email } = req.body;
+    const newUser = {
+      id: db.users.length ? db.users[db.users.length - 1].id + 1 : 1,
+      name,
+      email
+    };
 
-        res.status(201).json({
-            success: true,
-            message: 'Usuario guardado exitosamente',
-            data: { id: result.insertId, name, email }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+    db.users.push(newUser);
+    res.status(201).json({ success: true, message: 'Usuario creado exitosamente', data: newUser });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
-// [PUT] Actualizar un usuario existente
+// Actualizar usuario
 const updateUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, email } = req.body;
-        
-        const [result] = await pool.query(
-            'UPDATE users SET name = ?, email = ? WHERE id = ?',
-            [name, email, id]
-        );
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-        }
-
-        res.status(200).json({ success: true, message: 'Usuario actualizado correctamente' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    const index = db.users.findIndex(u => u.id === Number(id));
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
+
+    db.users[index] = { ...db.users[index], name, email };
+    res.status(200).json({ success: true, message: 'Usuario actualizado exitosamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
-// [DELETE] Eliminar un usuario
+// Eliminar usuario
 const deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+  try {
+    const { id } = req.params;
+    const index = db.users.findIndex(u => u.id === Number(id));
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
-        }
-
-        res.status(200).json({ success: true, message: 'Usuario eliminado correctamente' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
+
+    db.users.splice(index, 1);
+    res.status(200).json({ success: true, message: 'Usuario eliminado correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 module.exports = {
-    getUsers,
-    getUserById,
-    createUser,
-    updateUser,
-    deleteUser
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser
 };
