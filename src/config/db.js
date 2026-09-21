@@ -1,15 +1,17 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+// Importamos el objeto db desde nuestro archivo de configuración
+const { db } = require('./env'); 
 
+// Creamos el pool usando exclusivamente el objeto importado
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'workout_tracker',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+  host: db.host,
+  user: db.user,
+  password: db.password,
+  database: db.database,
+  port: db.port,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 module.exports = pool;

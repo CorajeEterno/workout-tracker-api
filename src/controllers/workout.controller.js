@@ -23,7 +23,31 @@ const createWorkout = async (req, res) => {
 
 const getWorkouts = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM workouts');
+    const { status, date, scheduledAt } = req.query; // Captura parámetros de la URL (?status=...&date=...)
+
+    let sql = 'SELECT * FROM workouts';
+    const params = [];
+    const conditions = [];
+
+    // Filtro por estado (status)
+    if (status) {
+      conditions.push('status = ?');
+      params.push(status);
+    }
+
+    // Filtro por fecha (acepta ?date=2026-09-20 o ?scheduledAt=2026-09-20)
+    const targetDate = date || scheduledAt;
+    if (targetDate) {
+      conditions.push('DATE(scheduledAt) = ?'); // Extrae solo el año-mes-día de la columna DATETIME
+      params.push(targetDate);
+    }
+
+    // Si hay uno o más filtros, los añade con WHERE
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const [rows] = await pool.query(sql, params);
     res.status(200).json({ success: true, data: rows });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
