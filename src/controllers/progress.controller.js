@@ -39,14 +39,20 @@ const createProgress = (req, res) => {
   }
 };
 
-// GET /api/v1/progress - Listar todo el progreso (con soporte a ?userId=1)
+// GET /api/v1/progress - Listar todo el progreso (soporta ?userId=1&limit=3)
 const getAllProgress = (req, res) => {
   try {
     let result = [...db.progress];
-    const { userId } = req.query;
+    const { userId, limit } = req.query;
 
+    // Filtro opcional por ID de usuario
     if (userId) {
       result = result.filter(p => p.userId === Number(userId));
+    }
+
+    // Filtro opcional para limitar número de resultados
+    if (limit && !isNaN(limit)) {
+      result = result.slice(0, Number(limit));
     }
 
     res.status(200).json({ success: true, count: result.length, data: result });

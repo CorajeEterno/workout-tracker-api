@@ -1,23 +1,22 @@
 const db = require('../config/db');
 
-// GET /api/v1/exercises (con filtros query opcionales)
+// GET /api/v1/exercises (con filtros query opcionales: ?category=fuerza&muscleGroup=pecho&limit=5)
 const getExercises = async (req, res) => {
   try {
     let results = db.exercises;
-    const { category, muscleGroup, limit } = req.query; // Uso de req.query (Punto 3)
+    const { category, muscleGroup, limit } = req.query;
 
-    // Filtros de búsqueda opcionales
     if (category) {
-      results = results.filter(e => e.category.toLowerCase() === category.toLowerCase());
+      results = results.filter(e => e.category?.toLowerCase() === category.toLowerCase());
     }
     if (muscleGroup) {
-      results = results.filter(e => e.muscleGroup.toLowerCase() === muscleGroup.toLowerCase());
+      results = results.filter(e => e.muscleGroup?.toLowerCase() === muscleGroup.toLowerCase());
     }
-    if (limit) {
+    if (limit && !isNaN(limit)) {
       results = results.slice(0, Number(limit));
     }
 
-    res.status(200).json({ success: true, data: results });
+    res.status(200).json({ success: true, count: results.length, data: results });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -26,7 +25,7 @@ const getExercises = async (req, res) => {
 // GET /api/v1/exercises/:id
 const getExerciseById = async (req, res) => {
   try {
-    const { id } = req.params; // Uso de req.params
+    const { id } = req.params;
     const exercise = db.exercises.find(e => e.id === Number(id));
 
     if (!exercise) {
@@ -42,9 +41,8 @@ const getExerciseById = async (req, res) => {
 // POST /api/v1/exercises
 const createExercise = async (req, res) => {
   try {
-    const { name, description, category, muscleGroup } = req.body; // Uso de req.body
+    const { name, description, category, muscleGroup } = req.body;
 
-    // Validación de campo obligatorio
     if (!name) {
       return res.status(400).json({ success: false, message: 'El nombre del ejercicio es obligatorio' });
     }
@@ -75,7 +73,6 @@ const updateExercise = async (req, res) => {
     const { id } = req.params;
     const { name, description, category, muscleGroup } = req.body;
 
-    // Validación de todos los campos obligatorios para PUT
     if (!name || !description || !category || !muscleGroup) {
       return res.status(400).json({ 
         success: false, 
@@ -100,7 +97,7 @@ const updateExercise = async (req, res) => {
   }
 };
 
-// PATCH /api/v1/exercises/:id (Actualización parcial)
+// PATCH /api/v1/exercises/:id (Actualización parcial con ID protegido)
 const updateExercisePatch = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,8 +107,11 @@ const updateExercisePatch = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Ejercicio no encontrado para actualizar' });
     }
 
-    // Fusionar campos existentes con las modificaciones
-    db.exercises[index] = { ...db.exercises[index], ...req.body };
+    db.exercises[index] = { 
+      ...db.exercises[index], 
+      ...req.body, 
+      id: Number(id) // Protección de ID
+    };
 
     res.status(200).json({
       success: true,
