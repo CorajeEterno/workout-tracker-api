@@ -1,8 +1,11 @@
 {
   "name": "workout-tracker-api",
-  "version": "1.0.0",
+  "version": "7.0.0",
   "description": "",
   "main": "index.js",
+  "engines":{
+    "node":">=24.0.0"
+  },
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"
