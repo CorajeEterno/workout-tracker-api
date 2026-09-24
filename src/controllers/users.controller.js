@@ -61,7 +61,7 @@ const createUser = (req, res) => {
   }
 };
 
-// PUT /api/v1/users/:id (Actualización completa)
+// PUT /api/v1/users/:id (Actualización completa - ID blindado)
 const updateUserPut = (req, res) => {
   try {
     const { name, email } = req.body;
@@ -80,14 +80,18 @@ const updateUserPut = (req, res) => {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
 
-    db.users[index] = { id: Number(req.params.id), name, email };
+    // Guardamos el ID real de la base de datos para evitar que lo alteren
+    const currentId = db.users[index].id;
+
+    // Reemplazamos el objeto pero forzamos a que mantenga su ID original
+    db.users[index] = { id: currentId, name, email };
     res.status(200).json({ success: true, message: 'Usuario reemplazado completamente', data: db.users[index] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// PATCH /api/v1/users/:id (Actualización parcial)
+// PATCH /api/v1/users/:id (Actualización parcial - ID blindado)
 const updateUserPatch = (req, res) => {
   try {
     const { email } = req.body;
@@ -102,7 +106,16 @@ const updateUserPatch = (req, res) => {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
     }
 
-    db.users[index] = { ...db.users[index], ...req.body };
+    // Guardamos el ID real
+    const currentId = db.users[index].id;
+
+    // Fusionamos los datos y blindamos el id al final del objeto
+    db.users[index] = { 
+      ...db.users[index], 
+      ...req.body, 
+      id: currentId 
+    };
+    
     res.status(200).json({ success: true, message: 'Usuario actualizado parcialmente', data: db.users[index] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
