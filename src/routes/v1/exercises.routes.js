@@ -1,19 +1,14 @@
 const { Router } = require('express');
-const {
-  getExercises,
-  getExerciseById,
-  createExercise,
-  updateExercise,
-  deleteExercise
-} = require('../../controllers/exercises.controller');
+const exercisecontrollers = require('../../controllers/exercises.controller');
 
 const router = Router();
 
-// Rutas CRUD para el catálogo de ejercicios (/api/v1/exercises)
-router.get('/', getExercises);
-router.get('/:id', getExerciseById);
-router.post('/', createExercise);
-router.put('/:id', updateExercise);
-router.delete('/:id', deleteExercise);
+
+router.get('/', exercisecontrollers.getExercises);
+router.get('/:id', exercisecontrollers.getExerciseById);
+router.post('/', exercisecontrollers.createExercise);
+router.put('/:id', exercisecontrollers.updateExercise);
+router.patch('/:id', exercisecontrollers. updateExercisePatch);
+router.delete('/:id', exercisecontrollers.deleteExercise);
 
 module.exports = router;

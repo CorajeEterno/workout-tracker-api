@@ -1,11 +1,9 @@
 const db = {
   users: [
-    { id: 1, name: 'Usuario Demo', email: 'demo@mail.com' },
-    { id: 2, name: 'Carlos Pérez', email: 'carlos@mail.com' }
+    { id: 1, name: 'Usuario Demo', email: 'demo@mail.com' }
   ],
   exercises: [
-    { id: 1, name: 'Press de Banca', description: 'Ejercicio de pecho con barra', category: 'Fuerza', muscleGroup: 'Pecho' },
-    { id: 2, name: 'Sentadilla Libre', description: 'Sentadilla profunda con barra', category: 'Fuerza', muscleGroup: 'Piernas' }
+    { id: 1, name: 'Press de Banca', description: 'Ejercicio de pecho con barra', category: 'Fuerza', muscleGroup: 'Pecho' }
   ],
   workouts: [
     {
@@ -15,28 +13,41 @@ const db = {
       description: 'Enfoque en hipertrofia',
       scheduledAt: '2026-09-20T10:00:00.000Z',
       durationMinutes: 60,
-      status: 'completed'
-    },
-    {
-      id: 2,
-      userId: 1,
-      title: 'Entrenamiento de Pierna Pesado',
-      description: 'Fuerza e intensidad alta',
-      scheduledAt: '2026-09-22T08:00:00.000Z',
-      durationMinutes: 45,
-      status: 'pending'
+      status: 'completed',
+      exercises: [
+        {
+          exerciseId: 1,
+          name: 'Press de Banca',
+          sets: 4,
+          reps: 10,
+          weight: 70
+        }
+      ]
     }
   ],
-  progressReports: [
+  progress: [
     {
       id: 1,
       userId: 1,
-      totalWorkouts: 2,
+      totalWorkouts: 1,
       history: [
-        { id: 1, title: 'Rutina de Pecho y Tríceps', scheduledAt: '2026-09-20T10:00:00.000Z', status: 'completed' },
-        { id: 2, title: 'Entrenamiento de Pierna Pesado', scheduledAt: '2026-09-22T08:00:00.000Z', status: 'pending' }
+        {
+          workoutId: 1,
+          title: 'Rutina de Pecho y Tríceps',
+          scheduledAt: '2026-09-20T10:00:00.000Z',
+          status: 'completed',
+          exercises: [
+            {
+              exerciseId: 1,
+              name: 'Press de Banca',
+              sets: 4,
+              reps: 10,
+              weight: 70
+            }
+          ]
+        }
       ],
-      generatedAt: '2026-09-21T12:00:00.000Z'
+      updatedAt: '2026-09-21T12:00:00.000Z'
     }
   ]
 };

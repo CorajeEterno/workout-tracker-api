@@ -1,21 +1,31 @@
 const { Router } = require('express');
+
+// Importaciones relativas desde la misma carpeta (src/routes/v1)
 const usersRoutes = require('./users.routes');
 const workoutsRoutes = require('./workouts.routes'); 
 const exercisesRoutes = require('./exercises.routes'); 
-const progressRoutes = require('./progress.routes'); // 1. Importar las rutas de progress
+const progressRoutes = require('./progress.routes'); 
 
 const router = Router();
 
-// Rutas de usuarios -> Resultado final: /api/v1/users
+// Rutas de los recursos
 router.use('/users', usersRoutes);
-
-// Rutas de entrenamientos -> Resultado final: /api/v1/workouts
 router.use('/workouts', workoutsRoutes); 
-
-// Rutas de ejercicios -> Resultado final: /api/v1/exercises
 router.use('/exercises', exercisesRoutes);
+router.use('/progress', progressRoutes); 
 
-// Rutas de progreso -> Resultado final: /api/v1/progress
-router.use('/progress', progressRoutes); // 2. Registrar las rutas de progress
+// Endpoint de metadatos o estado de la v1 (GET /api/v1/)
+router.get('/', (req, res) => {
+    res.json({
+        message: 'Workout Tracker API',
+        version: 'v1',
+        endpoints: {
+            users: '/api/v1/users',
+            workouts: '/api/v1/workouts',
+            exercises: '/api/v1/exercises',
+            progress: '/api/v1/progress'
+        }
+    });
+});
 
 module.exports = router;

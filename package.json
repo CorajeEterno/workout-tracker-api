@@ -1,8 +1,11 @@
 {
   "name": "workout-tracker-api",
   "version": "7.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "api simulada de entrenamientos y ejercicios",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"

@@ -1,171 +1,737 @@
 # Workout Tracker API
+API RESTful desarrollada en Node.js y Express para la gestión integral de usuarios, rutinas de entrenamiento, catálogo de ejercicios, asociación de ejercicios a entrenamientos y registro histórico de progreso.
 
-API RESTful desarrollada en Node.js y Express para la gestión de usuarios, entrenamientos, ejercicios y registro de progreso.
+## 🛠️ Tecnologías Utilizadas
+Node.js: Entorno de ejecución para JavaScript en el servidor.
 
-## Tecnologías Utilizadas
-- XAMPP(ayuda a crear la base de datos y que esta almacene datos)
-- extension visual studio code-MySQL-Database-clien.com
-- nodemon(actualiza cambios,notifica errores de servidor)
-- Node.js & Express
-- MySQL2 (Pool de conexiones)
-- Dotenv (Variables de entorno)
+Express.js: Framework web minimalista para la creación de la API RESTful.
 
-## 📂 Estructura del Proyecto
+Nodemon: Herramienta de desarrollo para recarga automática del servidor ante cambios de código.
 
-```text
-workout-tracker-api/
-├── src/
-│   ├── config/       # Configuración de base de datos y entorno
-│   ├── controllers/  # Lógica de negocio y controladores CRUD
-│   ├── routes/v1/    # Enrutador central y rutas de la API (v1)
-│   ├── app.js        # Configuración de la aplicación Express
-│   └── index.js      # Punto de entrada del servidor
-├── .env              # Variables de entorno confidenciales
-├── .gitignore        # Archivos y carpetas ignorados por Git
-├── .nvmrc       # version de node utilizada en el desarrollo del proyecto
-├── package.json      # Dependencias, scripts y metadatos del proyecto
-└── README.md         # Documentación oficial de la API
+Dotenv: Gestión de variables de entorno mediante archivos .env.
+
+Postman: Plataforma para pruebas y validación de endpoints HTTP.
+
+**POSTMAN**
+
+# Tabla de Endpoints y ejemplo de peticion y respuesta
+
+## users
+
+- 1.POST http://localhost:8000/api/v1/users (Creamos usuario)
+```json
+peticion(/users)
+
+{
+    "name": "Emmanuel Sierra Holguin",
+    "email": "sierra@gmail.com"
+}
+
+respuesta (201 create)
+
+{
+    "success": true,
+    "message": "Usuario creado exitosamente",
+    "data": {
+        "id": 2,
+        "name": "Emmanuel Sierra Holguin",
+        "email": "sierra@gmail.com"
+    }
+}
 ```
 
-# Tabla de Endpoints
-
-## 📌 Documentación de la API
-
-Base URL: `/api/v1`
-
----
-
-### 👤 Usuarios (`/api/v1/users`)
-
-| Método | Endpoint | Función Controlador | Descripción | Respuestas |
-|:---:|---|---|---|:---:|
-| `GET` | `/api/v1/users` | `getUsers` | Obtiene la lista completa de usuarios | `200`, `500` |
-| `POST` | `/api/v1/users` | `createUser` | Registra un nuevo usuario | `201`, `400`, `500` |
-| `GET` | `/api/v1/users/:id` | `getUserById` | Obtiene un usuario por su ID | `200`, `404`, `500` |
-| `PUT` | `/api/v1/users/:id` | `updateUser` | Actualiza la información de un usuario | `200`, `400`, `404` |
-| `DELETE` | `/api/v1/users/:id` | `deleteUser` | Elimina un usuario del sistema | `200`, `404`, `500` |
-
----
-
-### 🏋️‍♂️ Entrenamientos (`/api/v1/workouts`)
-
-| Método | Endpoint | Función Controlador | Descripción | Respuestas |
-|:---:|---|---|---|:---:|
-| `POST` | `/api/v1/workouts` | `createWorkout` | Registra un nuevo entrenamiento | `201`, `400`, `500` |
-| `GET` | `/api/v1/workouts` | `getWorkouts` | Lista entrenamientos *(filtros: `?status=`, `?date=`)* | `200`, `500` |
-| `GET` | `/api/v1/workouts/:id` | `getWorkoutById` | Obtiene un entrenamiento específico por ID | `200`, `404`, `500` |
-| `PUT` | `/api/v1/workouts/:id` | `updateWorkout` | Actualiza los datos de un entrenamiento | `200`, `404`, `500` |
-| `DELETE` | `/api/v1/workouts/:id` | `deleteWorkout` | Elimina un entrenamiento | `200`, `404`, `500` |
-| `POST` | `/api/v1/workouts/:workoutId/exercises` | `addExerciseToWorkout` | Asocia un ejercicio a la rutina (`sets`, `reps`, `weight`) | `201`, `404`, `500` |
-| `GET` | `/api/v1/workouts/:workoutId/exercises` | `getExercisesByWorkout` | Consulta ejercicios asociados a una rutina | `200`, `500` |
-| `PUT` | `/api/v1/workouts/:workoutId/exercises/:id` | `updateWorkoutExercise` | Modifica datos del ejercicio dentro de la rutina | `200`, `404`, `500` |
-| `DELETE` | `/api/v1/workouts/:workoutId/exercises/:id` | `removeExerciseFromWorkout` | Remueve un ejercicio de la rutina | `200`, `404`, `500` |
-
----
-
-### 🤸 Ejercicios (`/api/v1/exercises`)
-
-| Método | Endpoint | Función Controlador | Descripción | Respuestas |
-|:---:|---|---|---|:---:|
-| `GET` | `/api/v1/exercises` | `getExercises` | Obtiene el catálogo completo de ejercicios | `200`, `500` |
-| `GET` | `/api/v1/exercises/:id` | `getExerciseById` | Consulta el detalle de un ejercicio por ID | `200`, `404`, `500` |
-| `POST` | `/api/v1/exercises` | `createExercise` | Crea un nuevo ejercicio en el catálogo | `201`, `400`, `500` |
-| `PUT` | `/api/v1/exercises/:id` | `updateExercise` | Edita la información de un ejercicio | `200`, `404`, `500` |
-| `DELETE` | `/api/v1/exercises/:id` | `deleteExercise` | Elimina un ejercicio del catálogo | `200`, `404`, `500` |
-
----
-
-### 📈 Reportes de Progreso (`/api/v1/progress`)
-
-| Método | Endpoint | Función Controlador | Descripción | Respuestas |
-|:---:|---|---|---|:---:|
-| `GET` | `/api/v1/progress` | `getAllProgressReports` | Consulta historial global de reportes de progreso | `200`, `500` |
-| `POST` | `/api/v1/progress` | `generateProgressReport` | Genera un reporte de progreso *(requiere `userId` en Body)* | `201`, `400`, `404` |
-| `GET` | `/api/v1/progress/users/:userId` | `getProgressReportsByUser` | Obtiene reportes asociados a un usuario específico | `200`, `500` |
-| `PUT` | `/api/v1/progress/:id` | `updateProgressReport` | Modifica un reporte de progreso por ID | `200`, `404`, `500` |
-| `DELETE` | `/api/v1/progress/:id` | `deleteProgressReport` | Elimina un reporte de progreso por ID | `200`, `404`, `500` |
-
-## Ejemplo de Petición y Respuesta
-
-### POST `/api/v1/workouts`
-**Request (JSON):**
+- 2. GET http://localhost:8000/api/v1/users (lista de usuarios)
 ```json
+peticion (/users)
+
+respuesta (200 ok)
+
 {
-  "name": "Rutina de Pecho",
-  "description": "Ejercicios enfocados en hipertrofia pectoral"
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "name": "Usuario Demo",
+            "email": "demo@mail.com"
+        },
+        {
+            "id": 2,
+            "name": "Emmanuel Sierra Holguin",
+            "email": "sierra@gmail.com"
+        }
+    ]
+}
+```
+
+-  3.GET http://localhost:8000/api/v1/users/2 (Buscar usuario por ID)
+```json
+peticion (/users/id)
+
+respuesta (200 ok)
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "name": "Emmanuel Sierra Holguin",
+        "email": "sierra@gmail.com"
+    }
+}
+```
+
+- 4.PUT http://localhost:8000/api/v1/users/2 (remplazar)
+```json
+peticion (/users/id, es obligatorio rellenar todos los campos)
+{
+    "name": "emmanuel sierra Holguin",
+    "email": "si@gmail"
 }
 
- 1. `POST` `/api/v1/users` (Crear Usuario)
-**Request (JSON):**
-
+respuesta (200 OK)
 {
-  "name": "Emmanuel Sierra",
-  "email": "emmanuel@example.com",
+    "success": true,
+    "message": "Usuario reemplazado completamente",
+    "data": {
+        "id": 2,
+        "name": "emmanuel sierra Holguin",
+        "email": "si@gmail"
+    }
 }
-Response (JSON):
+```
 
-JSON
+- 5.PATCH http://localhost:8000/api/v1/users/2 (actualizacion parcia)
+```json
+peticion (/users/id, no es obligatorio rellenar cada campo)
 {
-  "success": true,
-  "message": "Usuario creado exitosamente",
-  "data": {
-    "id": 1,
-    "name": "Emmanuel Sierra",
-    "email": "emmanuel@example.com",
-  }
+    "name": "emmanuel sierra"
 }
-2. GET /api/v1/users (Listar todos los Usuarios)
-Request: No requiere cuerpo.
+respuesta (200 ok)
 
-Response (JSON):
-
-JSON
 {
-  "success": true,
-  "data": [
+    "success": true,
+    "message": "Usuario actualizado parcialmente",
+    "data": {
+        "id": 2,
+        "name": "emmanuel sierra",
+        "email": "si@gmail"
+    }
+}
+```
+
+- 6.DELETE http://localhost:8000/api/v1/users/2 (eliminar usuario)
+```json
+peticion (/users/id)
+
+respuesta (204 No Content)
+```
+
+## workouts
+
+- 1.POST http://localhost:8000/api/v1/workouts (crear entrenamiento)
+```json
+peticion(/workouts,rellenamos los campos)
+{
+  "userId": 2,
+  "title": "Rutina de Hipertrofia - Torso",
+  "description": "Sesión enfocada en empuje y tracción superior",
+  "scheduledAt": "2026-09-15T08:00:00Z",
+  "durationMinutes": 60,
+  "status": "pending"
+}
+respuesta(201 Created)
+
+{
+    "success": true,
+    "message": "Entrenamiento creado exitosamente",
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending"
+    }
+}
+```
+
+- 2.GET http://localhost:8000/api/v1/workouts (todos los entrenamientos)
+```json
+peticion(/workouts)
+
+respuesta (200 ok)
+
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "userId": 1,
+            "title": "Rutina de Pecho y Tríceps",
+            "description": "Enfoque en hipertrofia",
+            "scheduledAt": "2026-09-20T10:00:00.000Z",
+            "durationMinutes": 60,
+            "status": "completed"
+        },
+        {
+            "id": 2,
+            "userId": 2,
+            "title": "Rutina de Hipertrofia - Torso",
+            "description": "Sesión enfocada en empuje y tracción superior",
+            "scheduledAt": "2026-09-15T08:00:00Z",
+            "durationMinutes": 60,
+            "status": "pending"
+        }
+    ]
+}
+```
+
+- 3.GET http://localhost:8000/api/v1/workouts/2 (buscar entrenamiento por id)
+```json
+peticion (/workouts/id)
+
+respuesta (200 ok)
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending"
+    }
+}
+```
+
+
+- 4.PUT http://localhost:8000/api/v1/workouts/2 (reemplaza)
+```json
+peticion(/workouts/id,es obligatorio rellenar todos los campos requeridos)
+
+{
+  "userId": 1,
+  "title": "Rutina de Fuerza - Pierna",
+  "description": "Cuádriceps, isquiotibiales y pantorrilla",
+  "scheduledAt": "2026-09-18T09:00:00Z",
+  "durationMinutes": 75,
+  "status": "completed"
+}
+respuesta(200 ok)
+
+{
+    "success": true,
+    "message": "Entrenamiento reemplazado completamente",
+    "data": {
+        "id": 2,
+        "userId": 1,
+        "title": "Rutina de Fuerza - Pierna",
+        "description": "Cuádriceps, isquiotibiales y pantorrilla",
+        "scheduledAt": "2026-09-18T09:00:00Z",
+        "durationMinutes": 75,
+        "status": "completed"
+    }
+}
+```
+
+- 5.PATCH http://localhost:8000/api/v1/workouts/2 (actualiza)
+```json 
+peticion(/workouts/id, no requiere rellenar todos los campos)
+{
+  "status": "cancelled"
+}
+respuesta (200 ok)
+{
+    "success": true,
+    "message": "Entrenamiento actualizado parcialmente exitosamente",
+    "data": {
+        "id": 2,
+        "userId": 1,
+        "title": "Rutina de Fuerza - Pierna",
+        "description": "Cuádriceps, isquiotibiales y pantorrilla",
+        "scheduledAt": "2026-09-18T09:00:00Z",
+        "durationMinutes": 75,
+        "status": "cancelled"
+    }
+}
+```
+- 6.DELETE http://localhost:8000/api/v1/workouts/2 (elimina entrenamiento)
+```json
+peticion (/workouts/2)
+
+respuesta(204 No Content)
+```
+
+## exercises
+
+- 1.POST http://localhost:8000/api/v1/exercises (creamos ejercicio)
+```json
+peticion(/exercises, llenamos los campos)
+{
+  "name": "Press de Banca",
+  "description": "Ejercicio compuesto para pectoral mayor y tríceps con barra horizontal",
+  "category": "Fuerza",
+  "muscleGroup": "Pecho"
+}
+respuesta (201 Created)
+
+{
+    "success": true,
+    "message": "Ejercicio creado exitosamente",
+    "data": {
+        "id": 2,
+        "name": "Press de Banca",
+        "description": "Ejercicio compuesto para pectoral mayor y tríceps con barra horizontal",
+        "category": "Fuerza",
+        "muscleGroup": "Pecho"
+    }
+}
+```
+
+- 2.GET http://localhost:8000/api/v1/exercises (lista de ejercicios)
+```json
+peticion (/exercises)
+
+respuesta (200 OK)
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "name": "Press de Banca",
+            "description": "Ejercicio de pecho con barra",
+            "category": "Fuerza",
+            "muscleGroup": "Pecho"
+        },
+        {
+            "id": 2,
+            "name": "Press de Banca",
+            "description": "Ejercicio compuesto para pectoral mayor y tríceps con barra horizontal",
+            "category": "Fuerza",
+            "muscleGroup": "Pecho"
+        }
+    ]
+}
+```
+
+- 3.GET http://localhost:8000/api/v1/exercises/2 (buscamos ejercicio por id)
+```json
+peticion(/exercises/id)
+
+respuesta (200 OK)
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "name": "Press de Banca",
+        "description": "Ejercicio compuesto para pectoral mayor y tríceps con barra horizontal",
+        "category": "Fuerza",
+        "muscleGroup": "Pecho"
+    }
+}
+```
+
+- 4.PUT http://localhost:8000/api/v1/exercises/2 (reemplazar)
+```json
+peticion (/exercises/id)
+{
+  "name": "Sentadilla Búlgara",
+  "description": "Ejercicio unipodal centrado en cuádriceps y glúteos",
+  "category": "Hipertrofia",
+  "muscleGroup": "Pierna"
+}
+respuesta (200 OK)
+{
+    "success": true,
+    "message": "Ejercicio reemplazado completamente",
+    "data": {
+        "id": 2,
+        "name": "Sentadilla Búlgara",
+        "description": "Ejercicio unipodal centrado en cuádriceps y glúteos",
+        "category": "Hipertrofia",
+        "muscleGroup": "Pierna"
+    }
+}
+```
+
+- 5.PATCH http://localhost:8000/api/v1/exercises/2 (actualizar)
+```json
+peticion (/exercises/id)
+{
+  "category": "Fuerza Máxima"
+}
+respuesta (200 OK)
+{
+    "success": true,
+    "message": "Ejercicio actualizado parcialmente exitosamente",
+    "data": {
+        "id": 2,
+        "name": "Sentadilla Búlgara",
+        "description": "Ejercicio unipodal centrado en cuádriceps y glúteos",
+        "category": "Fuerza Máxima",
+        "muscleGroup": "Pierna"
+    }
+}
+```
+- 6.DELETE http://localhost:8000/api/v1/exercises/2 (eliminar ejercicio)
+```json
+peticion (/exercises/id)
+
+respuesta (204 No Content)
+```
+
+## workoutse-xercises
+(esta dentro de entrenamientos por tanto podemos buscar la lista o id por entrenamientos, el jemplo esta en workout)
+- 1.POST http://localhost:8000/api/v1/workouts/2/exercises (juntar ejercicio con entrenamiento)
+```json
+peticion (/workouts/id/exercises)
+{
+  "exerciseId": 2,
+  "sets": 4,
+  "reps": 10,
+  "weight": 75.0
+}
+respuesta(201 Created)
+{
+    "success": true,
+    "message": "Ejercicio vinculado exitosamente al entrenamiento",
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending",
+        "exercises": [
+            {
+                "exerciseId": 2,
+                "name": "Zancadas Búlgaras con Mancuernas",
+                "sets": 4,
+                "reps": 10,
+                "weight": 75
+            }
+        ]
+    }
+}
+```
+- 2.PUT http://localhost:8000/api/v1/workouts/2/exercises/2 (reemplazar) 
+```json
+peticion (/workouts/id/exercises/id)
+
+respuesta (200 OK)
+{
+    "success": true,
+    "message": "Ejercicio del entrenamiento actualizado completamente",
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending",
+        "exercises": [
+            {
+                "exerciseId": 2,
+                "name": "Zancadas Búlgaras con Mancuernas",
+                "sets": 5,
+                "reps": 12,
+                "weight": 80
+            }
+        ]
+    }
+}
+```
+- 3.PATCH http://localhost:8000/api/v1/workouts/2/exercises/2 (actualizamos)
+```json
+peticion (/workouts/id/exercises/id)
+{
+  "sets": 8
+}
+respuesta (200 OK)
+{
+    "success": true,
+    "message": "Ejercicio del entrenamiento actualizado parcialmente",
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending",
+        "exercises": [
+            {
+                "exerciseId": 2,
+                "name": "Zancadas Búlgaras con Mancuernas",
+                "sets": 8,
+                "reps": 12,
+                "weight": 80
+            }
+        ]
+    }
+}
+```
+- 4.DELETE http://localhost:8000/api/v1/workouts/2/exercises/2 (desvincular)
+```json
+peticion (/workouts/id/exercises/id)
+
+respuesta(200ok)
+{
+    "success": true,
+    "message": "Ejercicio eliminado del entrenamiento exitosamente",
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "title": "Rutina de Hipertrofia - Torso",
+        "description": "Sesión enfocada en empuje y tracción superior",
+        "scheduledAt": "2026-09-15T08:00:00Z",
+        "durationMinutes": 60,
+        "status": "pending",
+        "exercises": []
+    }
+}
+
+```
+
+## progress
+
+
+- 1.POST http://localhost:8000/api/v1/progress (creamos registro de progreso)
+```json
+peticion (/progress)
+{
+  "userId": 2
+}
+respuesta (201 Created)
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "totalWorkouts": 1,
+        "history": [
+            {
+                "workoutId": 2,
+                "title": "Rutina de Hipertrofia - Torso",
+                "scheduledAt": "2026-09-15T08:00:00Z",
+                "status": "pending",
+                "exercises": [
+                    {
+                        "exerciseId": 2,
+                        "name": "Zancadas Búlgaras con Mancuernas",
+                        "sets": 4,
+                        "reps": 10,
+                        "weight": 75
+                    }
+                ]
+            }
+        ],
+        "createdAt": "2026-09-24T03:01:55.074Z"
+    }
+}
+```
+
+- 2.GET http://localhost:8000/api/v1/progress (obtenemos lista de progresos)
+```json
+peticion (/progress)
+
+respuesta (200 OK
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "totalWorkouts": 1,
+        "history": [
+            {
+                "workoutId": 2,
+                "title": "Rutina de Hipertrofia - Torso",
+                "scheduledAt": "2026-09-15T08:00:00Z",
+                "status": "pending",
+                "exercises": [
+                    {
+                        "exerciseId": 2,
+                        "name": "Zancadas Búlgaras con Mancuernas",
+                        "sets": 4,
+                        "reps": 10,
+                        "weight": 75
+                    }
+                ]
+            }
+        ],
+        "createdAt": "2026-09-24T03:01:55.074Z"
+    }
+}
+```
+
+- 3.GET http://localhost:8000/api/v1/progress/2 (obtener progreso de id)
+```json
+peticion (/progress/id)
+
+respuesta (200 OK)
+
+{
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 2,
+        "totalWorkouts": 1,
+        "history": [
+            {
+                "workoutId": 2,
+                "title": "Rutina de Hipertrofia - Torso",
+                "scheduledAt": "2026-09-15T08:00:00Z",
+                "status": "pending",
+                "exercises": [
+                    {
+                        "exerciseId": 2,
+                        "name": "Zancadas Búlgaras con Mancuernas",
+                        "sets": 4,
+                        "reps": 10,
+                        "weight": 75
+                    }
+                ]
+            }
+        ],
+        "createdAt": "2026-09-24T03:01:55.074Z"
+    }
+}
+```
+
+- 4.PUT http://localhost:8000/api/v1/progress/2 (reemplazamos) 
+```json
+peticion (/progress/2)
+{
+  "userId": 1,
+  "totalWorkouts": 2,
+  "history": [
     {
-      "id": 1,
-      "name": "Emmanuel Sierra",
-      "email": "emmanuel@example.com",
+      "workoutId": 1,
+      "title": "Rutina de Pecho e Hipertrofia (Actualizada)",
+      "scheduledAt": "2026-09-20T10:00:00.000Z",
+      "status": "completed",
+      "exercises": [
+        {
+          "exerciseId": 1,
+          "name": "Press de Banca",
+          "sets": 5,
+          "reps": 8,
+          "weight": 80.0
+        }
+      ]
     }
   ]
 }
-3. GET /api/v1/users/:id (Obtener Usuario por ID)
-Request: No requiere cuerpo. (Ejemplo de URL: /api/v1/users/1)
-
-Response (JSON):
-
-JSON
+respuesta (200 OK)
 {
-  "success": true,
-  "data": {
-    "id": 1,
-    "name": "Emmanuel Sierra",
-    "email": "emmanuel@example.com",
-  }
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 1,
+        "totalWorkouts": 2,
+        "history": [
+            {
+                "workoutId": 1,
+                "title": "Rutina de Pecho e Hipertrofia (Actualizada)",
+                "scheduledAt": "2026-09-20T10:00:00.000Z",
+                "status": "completed",
+                "exercises": [
+                    {
+                        "exerciseId": 1,
+                        "name": "Press de Banca",
+                        "sets": 5,
+                        "reps": 8,
+                        "weight": 80
+                    }
+                ]
+            }
+        ],
+        "updatedAt": "2026-09-24T03:10:17.695Z"
+    }
 }
-4. PUT /api/v1/users/:id (Actualizar Usuario)
-Request (JSON): (Ejemplo de URL: /api/v1/users/1)
 
-JSON
+```
+
+- 5.PATCH http://localhost:8000/api/v1/progress/2 (actualizar)
+```json
+peticion
 {
-  "name": "Emmanuel Sierra Holguin",
-  "email": "emmanuel.sierra@example.com",
+  "totalWorkouts": 5
 }
-Response (JSON):
-
-JSON
+respuesta (200 OK)
 {
-  "success": true,
-  "message": "Usuario actualizado exitosamente"
+    "success": true,
+    "data": {
+        "id": 2,
+        "userId": 1,
+        "totalWorkouts": 5,
+        "history": [
+            {
+                "workoutId": 1,
+                "title": "Rutina de Pecho e Hipertrofia (Actualizada)",
+                "scheduledAt": "2026-09-20T10:00:00.000Z",
+                "status": "completed",
+                "exercises": [
+                    {
+                        "exerciseId": 1,
+                        "name": "Press de Banca",
+                        "sets": 5,
+                        "reps": 8,
+                        "weight": 80
+                    }
+                ]
+            }
+        ],
+        "updatedAt": "2026-09-24T03:14:00.048Z"
+    }
 }
-5. DELETE /api/v1/users/:id (Eliminar Usuario)
-Request: No requiere cuerpo. (Ejemplo de URL: /api/v1/users/1)
+```
 
-Response (JSON):
+- 6.DELETE http://localhost:8000/api/v1/progress/2 (eliminar progreso)
+```json
+peticion (/progress/id)
 
-JSON
+respuesta (204 no Content)
+```
+
+## estados errores posibles
+
+- 400 Bad Request — Datos Incompletos o Inválidos 
+```json
+peticion POST (/users)
 {
-  "success": true,
-  "message": "Usuario eliminado exitosamente"
+    "name": "Emmanuel Sierra Holguin",
+    "email": "sierra"
 }
+
+Respuesta(400)
+{
+    "success": false,
+    "message": "El correo electrónico no es válido, debe contener un \"@\""
+}
+```
+- 404 Not Found — Recurso No Encontrado
+```json
+peticion GET (/users/id)
+respuesta(404)
+{
+    "success": false,
+    "message": "Usuario no encontrado"
+}
+
+```
+
+- 500 Internal Server Error — Error Interno del Servidor
+```json
+peticion GET (/progress)
+
+respuesta(500)
+{
+    "success": false,
+    "message": "db.progress is not iterable"
+}
+```
+
+
